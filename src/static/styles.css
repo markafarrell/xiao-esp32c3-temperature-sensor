@@ -1,0 +1,54 @@
+input {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	outline: none;
+	border: none;
+	border-radius: 0;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+}
+
+.label {
+	display: block;
+	margin-bottom: 0.25em;
+}
+
+.input, .submit {
+	padding: 10px;
+	border-width: 1px;
+	border-style: solid;
+	border-color: lightgray;
+	background-color: white;
+
+	&:focus {
+		border-color: gray;
+	}
+
+	&::placeholder {
+		color: gray;
+	}
+}
+
+.submit:hover {
+	border-color: darkgrey;
+	background-color: lightgray;
+}
+
+body {
+	padding: 0 20px 20px 20px;
+	font-family: Verdana, sans-serif;
+}
+
+h1 {
+	margin-bottom: 1em;
+}
+
+form {
+	max-width: 500px;
+}
+
+.input {
+	margin-bottom: 1em;
+}

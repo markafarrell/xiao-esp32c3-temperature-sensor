@@ -47,15 +47,18 @@ esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 460800 write_flash -z 0x0 m
 
 ### Install
 
-1. Install requests
+1. Install requirements
 
 ```
 mpremote a0 mip install requests
+mpremote a0 mip install microdot
 ```
 
 2. Install application
 
 ```
+mpremote a0 cp src/config.py :config.py
+mpremote a0 cp src/config_web.py :config_web.py
 mpremote a0 cp src/secrets.py :secrets.py
 mpremote a0 cp src/sensor_mapping.py :sensor_mapping.py
 mpremote a0 cp src/main.py :main.py

@@ -7,6 +7,7 @@ import network
 
 import secrets
 import sensor_mapping
+import config
 
 max_valid_temperature = 50
 min_valid_temperature = -10
@@ -46,21 +47,80 @@ def pushMetric(pushgateway_url, job, name, value, type=None, labels=[]):
     except Exception as ex:
         print(f'Could not publish metric. {ex}')
 
-sta_if = network.WLAN(network.STA_IF)
-sta_if.active(True)
+def createAP(ssid, password):
+    ap = network.WLAN(network.AP_IF)
+    ap.active(True)
+    ap.config(essid=ssid, password=password)
 
-if sta_if.isconnected():
-    sta_if.disconnect()
+    print("Waiting for AP to be active")
+    while ap.active() == False:
+        print('.', end='')
+        time.sleep(0.1)
+        pass
 
-print(f'Connecting to WiFi')
-sta_if.connect(secrets.wifi_ssid, secrets.wifi_password)
+    print('AP created successfully. SSID: {ssid} Password: {password}')
+    print(ap.ifconfig())
 
-while not sta_if.isconnected():
-    print('.', end='')
-    time.sleep(0.1)
-print()
+    return ap
 
-pushgateway_url = 'http://192.168.0.99:9091'
+def connectWifi(
+        ssid,
+        password,
+        wifi_connect_timeout_seconds=10,
+        wifi_connect_timeout_interval=0.1
+    ):
+    '''
+        Attempt to connect to wifi.
+    '''
+    sta_if = network.WLAN(network.STA_IF)
+    sta_if.active(True)
+
+    if sta_if.isconnected():
+        sta_if.disconnect()
+
+    print(f'Connecting to WiFi SSID:{ssid} Password:{password}')
+    sta_if.connect(ssid, password)
+
+    wifi_connect_timeout_seconds = 10  # Seconds
+    wifi_connect_timeout_interval = 0.1  # Seconds
+
+    for i in range(wifi_connect_timeout_seconds *  wifi_connect_timeout_interval):
+        if sta_if.isconnected():
+            break
+        print('.', end='')
+        time.sleep(wifi_connect_timeout_interval)
+    print()
+
+    return sta_if
+
+# 1. Attempt to connect to WIFI using secrets
+
+sta_if = connectWifi(secrets.wifi_ssid, secrets.wifi_password)
+
+if not sta_if.isconnected():
+    # If we can't connect to wifi with stored credentials after
+    # wifi_connect_timeout_seconds then start Broadcast an AP and
+    # start a web server to allow credentials to be entered
+
+    # Deactivate STA
+    sta_if.active(False)
+
+    ap = createAP("SensorNet", "SensorNet")
+
+    # import config_web
+    # config_web.app.run(debug=True)
+
+    time.sleep(1000)
+
+    # After the webserver is terminated we reset so that we can use the new
+    # settings to connect
+    machine.reset()
+
+else:
+    connection_details = sta_if.ifconfig()
+    # this returns a 4-tuple
+    # (ip, subnet, gateway, dns)
+    print(f'Connected to {secrets.wifi_ssid}. IP: {connection_details[0]} subnet: {connection_details[1]} gateway: {connection_details[2]} dns: {connection_details[3]}')
 
 # the device is on GPIO7 D5
 dat = machine.Pin(7)
@@ -100,7 +160,7 @@ for rom in roms:
             )
 
         pushMetric(
-            pushgateway_url=pushgateway_url,
+            pushgateway_url=config.pushgateway_url,
             job='ds18x20-exporter',
             name='ds18x20_temperature_celsius',
             value=temp,
@@ -109,4 +169,4 @@ for rom in roms:
         )
 
 # put the device to sleep
-machine.deepsleep(30000)
+# machine.deepsleep(30000)
