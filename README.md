@@ -61,6 +61,12 @@ mpremote a0 cp src/sensor_mapping.py :sensor_mapping.py
 mpremote a0 cp src/main.py :main.py
 ```
 
+3. Run application
+
+```
+mpremote a0 run src/main.py
+```
+
 ## Monitor Serial
 
 ### Connect
